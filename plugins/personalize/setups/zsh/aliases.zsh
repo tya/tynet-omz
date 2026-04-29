@@ -9,10 +9,10 @@
 #############################################################################
 # Direcotry movement aliases
 #############################################################################
-alias up="cd ..; echo $PWD"
-alias up2="cd ../..; echo $PWD"
-alias up3="cd ../../..; echo $PWD"
-alias up4="cd ../../../..; echo $PWD"
+alias up='cd ..; echo $PWD'
+alias up2='cd ../..; echo $PWD'
+alias up3='cd ../../..; echo $PWD'
+alias up4='cd ../../../..; echo $PWD'
 
 #############################################################################
 # ls aliases
