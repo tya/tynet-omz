@@ -10,7 +10,7 @@ A custom oh-my-zsh plugin directory. It is activated by setting `ZSH_CUSTOM` in 
 
 There are three oh-my-zsh plugins in `plugins/`:
 
-- **personalize** — The main plugin. Its entry point (`personalize.plugin.zsh`) sources all `*.zsh` files found under `setups/` (sorted alphabetically), then calls `cleanpath` to deduplicate `$PATH`.
+- **personalize** — The main plugin. Its entry point (`personalize.plugin.zsh`) sources all `*.zsh` files found under `setups/` (sorted alphabetically via process substitution), then calls `cleanpath` to deduplicate `$PATH`.
 - **zsh-completions** — Wires up Homebrew's zsh-completions into `FPATH`.
 - **zsh-fast-syntax-highlighting** — Sources the Homebrew-installed fast-syntax-highlighting plugin.
 
@@ -28,7 +28,10 @@ Files are sourced in alphabetical order by full path, so `osx/` loads before `zs
 
 ## Key Conventions
 
-- All setup files use `*.zsh` extension and are plain POSIX-ish shell with zsh extensions.
-- Platform-conditional logic uses the `$OS` variable (set in `zsh/exports.zsh` from `uname`): values are `osx` or `linux`.
+- All setup files use `*.zsh` extension and are plain zsh shell.
+- Platform-conditional logic uses the `$OS` variable (set in `zsh/exports.zsh` from `uname`): values are `osx` or `linux`. This is used for cross-platform differences like `ls` color flags (`-G` on macOS, `--color=auto` on Linux).
+- Optional tool aliases (httpie, docker-compose, docker-machine, SourceTree, 1Password CLI) are guarded with `command -v` or path checks so they only load when the tool is installed.
 - Homebrew availability is checked with `type brew &>/dev/null` or `command -v` before using brew paths.
-- The `cg` alias provides a bare-repo git workflow for dotfiles (`~/.cg/`).
+- Use functions instead of aliases when positional arguments (`$1`, `$@`) are needed — aliases don't support arguments.
+- Use single quotes for aliases that reference shell variables (like `$PWD`) that should expand at runtime, not at definition time.
+- The `cg` function provides a bare-repo git workflow for dotfiles (`~/.cg/`).
