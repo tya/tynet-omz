@@ -18,8 +18,8 @@ alias up4="cd ../../../..; echo $PWD"
 # ls aliases
 #############################################################################
 alias ls="ls -hG"
-alias lll="ls -alhG $1 | less"
-alias llm="ls -alhG $1 | more"
+alias lll="ls -alhG | less"
+alias llm="ls -alhG | more"
 alias ll="ls -lhG"
 alias la="ls -alhG"
 alias lt="ls -ltG"
@@ -44,7 +44,7 @@ alias c=clear
 alias h=history
 alias l=less
 alias m=more
-alias lns="ln -s $1"
+lns() { ln -s "$1"; }
 alias dirs="dirs -v"
 alias grep="grep --color"
 alias egrep="egrep --color"
@@ -54,8 +54,8 @@ alias ppath='echo $PATH | tr \: \\n'
 #############################################################################
 # Search aliases
 #############################################################################
-alias fndenv="env | grep -i $1"
-alias fndcmd="history | grep -i $1"
+fndenv() { env | grep -i "$1"; }
+fndcmd() { history | grep -i "$1"; }
 
 #############################################################################
 # Typo aliases
@@ -98,11 +98,6 @@ alias jwt='http --default-scheme=https --auth-type jwt'
 #############################################################################
 alias doc="docker-compose"
 alias mac="docker-machine"
-
-#############################################################################
-# golang shortcut
-#############################################################################
-alias tya='cd $GOPATH/src/github.com/tya'
 
 #############################################################################
 # cfg dotfile shortcut

@@ -24,4 +24,6 @@ fi
 #############################################################################
 # 1password setup
 #############################################################################
-eval "$(op completion zsh)"; compdef _op op
+if command -v op &> /dev/null; then
+  eval "$(op completion zsh)"; compdef _op op
+fi

@@ -19,4 +19,6 @@ personalize() {
 personalize
 
 # remove duplicates from path
-cleanpath
+if typeset -f cleanpath > /dev/null; then
+  cleanpath
+fi
