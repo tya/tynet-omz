@@ -10,9 +10,9 @@ personalize() {
 
   # source setups
   setups="${personalize_home}/setups"
-  for setup in $(find "${setups}" -iname "*.zsh" | sort); do
+  while IFS= read -r setup; do
     source "${setup}"
-  done
+  done < <(find "${setups}" -iname "*.zsh" | sort)
 }
 
 # load personalize scripts

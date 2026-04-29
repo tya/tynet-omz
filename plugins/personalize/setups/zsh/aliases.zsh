@@ -17,12 +17,21 @@ alias up4='cd ../../../..; echo $PWD'
 #############################################################################
 # ls aliases
 #############################################################################
-alias ls="ls -hG"
-alias lll="ls -alhG | less"
-alias llm="ls -alhG | more"
-alias ll="ls -lhG"
-alias la="ls -alhG"
-alias lt="ls -ltG"
+if [[ "$OS" == 'osx' ]]; then
+  alias ls="ls -hG"
+  alias lll="ls -alhG | less"
+  alias llm="ls -alhG | more"
+  alias ll="ls -lhG"
+  alias la="ls -alhG"
+  alias lt="ls -ltG"
+else
+  alias ls="ls -h --color=auto"
+  alias lll="ls -alh --color=auto | less"
+  alias llm="ls -alh --color=auto | more"
+  alias ll="ls -lh --color=auto"
+  alias la="ls -alh --color=auto"
+  alias lt="ls -lt --color=auto"
+fi
 
 #############################################################################
 # Terminal aliases
@@ -44,7 +53,7 @@ alias c=clear
 alias h=history
 alias l=less
 alias m=more
-lns() { ln -s "$1"; }
+lns() { ln -s "$@"; }
 alias dirs="dirs -v"
 alias grep="grep --color"
 alias egrep="egrep --color"
@@ -90,17 +99,23 @@ alias gl="git log -n 5"
 #############################################################################
 # httpie aliases
 #############################################################################
-alias https='http --default-scheme=https'
-alias jwt='http --default-scheme=https --auth-type jwt'
+if command -v http &> /dev/null; then
+  alias https='http --default-scheme=https'
+  alias jwt='http --default-scheme=https --auth-type jwt'
+fi
 
 #############################################################################
 # docker aliases
 #############################################################################
-alias doc="docker-compose"
-alias mac="docker-machine"
+if command -v docker-compose &> /dev/null; then
+  alias doc="docker-compose"
+fi
+if command -v docker-machine &> /dev/null; then
+  alias mac="docker-machine"
+fi
 
 #############################################################################
 # cfg dotfile shortcut
 #############################################################################
-alias cg='/usr/bin/git --git-dir=$HOME/.cg/ --work-tree=$HOME'
+cg() { /usr/bin/git --git-dir=$HOME/.cg/ --work-tree=$HOME "$@"; }
 alias cgs='cg status'

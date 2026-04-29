@@ -8,6 +8,6 @@
 #############################################################################
 # Application Aliases
 #############################################################################
-if [[ "$OS" == 'osx' ]]; then
+if [[ "$OS" == 'osx' ]] && [ -d "/Applications/SourceTree.app" ]; then
     alias st='open -a SourceTree'
 fi

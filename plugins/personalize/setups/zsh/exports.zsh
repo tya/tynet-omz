@@ -26,7 +26,7 @@ export OS
 #############################################################################
 # shell settings
 #############################################################################
-export HISTCONTROL=ignoredups
+setopt HIST_IGNORE_DUPS
 export EDITOR=vim
 export LESS="-RFX"
 
