@@ -13,13 +13,22 @@ ZSH_CUSTOM=$HOME/path/to/oh-my-zsh-custom
 Then add the plugins to your `~/.zshrc` plugins list:
 
 ```zsh
-plugins=(personalize zsh-completions zsh-fast-syntax-highlighting)
+plugins=(personalize zsh-fast-syntax-highlighting)
 ```
+
+The following oh-my-zsh settings should be set in `~/.zshrc` before sourcing oh-my-zsh:
+
+```zsh
+COMPLETION_WAITING_DOTS="true"
+DISABLE_AUTO_TITLE="true"
+DISABLE_CORRECTION="true"
+```
+
+For Homebrew completions, add `eval "$(brew shellenv)"` to your `~/.zprofile` or `~/.zshrc` before sourcing oh-my-zsh.
 
 ## Plugins
 
 - **personalize** — Aliases, exports, functions, and PATH setup, organized by context (`zsh` for global, `osx` for macOS-specific). Automatically sources all `*.zsh` files under `setups/` in alphabetical order. Optional tool aliases (httpie, docker, SourceTree) are only loaded when the tool is installed.
-- **zsh-completions** — Hooks Homebrew's [zsh-completions](https://github.com/zsh-users/zsh-completions) into `FPATH`.
 - **zsh-fast-syntax-highlighting** — Loads Homebrew's [fast-syntax-highlighting](https://github.com/zdharma-continuum/fast-syntax-highlighting).
 
 ## Cross-platform

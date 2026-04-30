@@ -8,10 +8,9 @@ A custom oh-my-zsh plugin directory. It is activated by setting `ZSH_CUSTOM` in 
 
 ## Architecture
 
-There are three oh-my-zsh plugins in `plugins/`:
+There are two oh-my-zsh plugins in `plugins/`:
 
 - **personalize** — The main plugin. Its entry point (`personalize.plugin.zsh`) sources all `*.zsh` files found under `setups/` (sorted alphabetically via process substitution), then calls `cleanpath` to deduplicate `$PATH`.
-- **zsh-completions** — Wires up Homebrew's zsh-completions into `FPATH`.
 - **zsh-fast-syntax-highlighting** — Sources the Homebrew-installed fast-syntax-highlighting plugin.
 
 ### personalize setup structure
