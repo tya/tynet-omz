@@ -1,4 +1,4 @@
-# oh-my-zsh-custom
+# tynet-omz
 
 Custom plugins and shell configuration for [oh-my-zsh](https://github.com/ohmyzsh/ohmyzsh).
 
@@ -7,7 +7,7 @@ Custom plugins and shell configuration for [oh-my-zsh](https://github.com/ohmyzs
 Set `ZSH_CUSTOM` in your `~/.zshrc` to point to this repo:
 
 ```zsh
-ZSH_CUSTOM=$HOME/path/to/oh-my-zsh-custom
+ZSH_CUSTOM=$HOME/path/to/tynet-omz
 ```
 
 Then add the plugins to your `~/.zshrc` plugins list:
