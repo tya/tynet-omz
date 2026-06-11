@@ -36,3 +36,8 @@ export LESS="-RFX"
 export SAM_CLI_TELEMETRY=0
 export AWS_SESSION_TTL=12h
 export AWS_ASSUME_ROLE_TTL=12h
+
+#############################################################################
+# Unifi MCP
+#############################################################################
+export UNIFI_POLICY_DELETE=false
