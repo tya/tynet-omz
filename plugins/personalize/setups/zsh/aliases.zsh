@@ -119,3 +119,12 @@ fi
 #############################################################################
 cg() { /usr/bin/git --git-dir=$HOME/.cg/ --work-tree=$HOME "$@"; }
 alias cgs='cg status'
+
+#############################################################################
+# Claude Code + UniFi MCP — wraps claude launch with op-resolved credentials
+# so the unifi-network MCP server inherits UNIFI_NETWORK_USERNAME / _PASSWORD
+# from the 1Password item referenced in ~/.config/unifi-mcp/.env.
+#############################################################################
+if command -v op &> /dev/null && [[ -f "$HOME/.config/unifi-mcp/.env" ]]; then
+  alias claude-unifi='op run --env-file "$HOME/.config/unifi-mcp/.env" -- claude'
+fi
