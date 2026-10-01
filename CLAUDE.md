@@ -4,52 +4,123 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What This Is
 
-A custom oh-my-zsh plugin directory. It is activated by setting `ZSH_CUSTOM` in `~/.zshrc` to point to this repo's root.
+A **framework-free zsh configuration**, sourced from `~/.zshrc` with a single line:
+
+```zsh
+source "$HOME/.tynet-omz/init.zsh"
+```
+
+It used to be an oh-my-zsh `ZSH_CUSTOM` plugin dir. oh-my-zsh was removed because it
+dominated startup time (unoptimised `compinit` every shell + framework loader ≈ 1s).
+There is no oh-my-zsh, no plugin manager, and no `ZSH_CUSTOM` anymore.
+
+### Behavior changes from the oh-my-zsh era
+
+Anything that looks like a regression against the old setup is probably one
+of these intentional changes, not a bug:
+
+- `docker-machine`'s alias is `dm`, not `mac` (`mac` was a footgun).
+- `setup-displays` (air15 `displayplacer` layout) no longer runs at shell
+  startup — it's autoloaded from `functions/` and must be invoked by hand.
+- oh-my-zsh's implicit `setopt`s, keybindings, and ↑/↓ prefix-search are now
+  declared explicitly in `domains/00-core.zsh` — if a default seems to have
+  disappeared, it was probably an oh-my-zsh framework default that now needs
+  an explicit line there.
+- `~/.oh-my-zsh` is unreferenced and safe to delete once this lands alongside
+  the companion `~/.zshrc` change in the `cg` dotfiles repo.
 
 ## Architecture
 
-There are two oh-my-zsh plugins in `plugins/`:
+`init.zsh` is the entry point. In order it:
 
-- **personalize** — The main plugin. Its entry point (`personalize.plugin.zsh`) defines a `personalize` function that `find`s and `source`s every `*.zsh` file under `setups/` in alphabetical order, calls it, then invokes `cleanpath` to deduplicate `$PATH`.
-- **zsh-fast-syntax-highlighting** — Sources the Homebrew-installed fast-syntax-highlighting plugin.
+1. Returns unless the shell is interactive.
+2. Sets `TYNET_HOME` (this repo, resolved from `${(%):-%x}`), and `TYNET_OS` /
+   `OS` / `PLATFORM` / `ARCHITECTURE` from `$OSTYPE` and `$CPUTYPE` — **no `uname`
+   subprocess**, and **before** any domain file (so an `aliases` section can read
+   `$OS`, which the old layout could not).
+3. Sources `lib/plugins.zsh` then `lib/compinit.zsh`.
+4. Builds an ordered, de-duplicated list of `domains/*.zsh` (see below) and sources it.
+5. Sources `lib/prompt.zsh`.
+6. `typeset -U path PATH fpath FPATH` — de-dupes PATH keeping order (this replaced
+   the old `cleanpath` function and its `awk` fork).
+7. Calls `tynet_load_fsh` — fast-syntax-highlighting, which **must be last**.
 
-### personalize setup structure
+`TYNET_PROFILE=1` wraps the whole thing in `zmodload zsh/zprof` … `zprof`.
 
-Each subdirectory under `plugins/personalize/setups/<context>/` contains four files:
-- `aliases.zsh` — shell aliases
-- `exports.zsh` — environment variable exports
-- `functions.zsh` — shell functions
-- `rc.zsh` — run-control (PATH additions, tool initialization)
+### `lib/`
 
-Contexts: `zsh` (global), `osx` (macOS-specific). To add a new context (e.g. `linux/`), create a directory with the same four-file shape.
+- **plugins.zsh** — prepends completion dirs to `fpath`
+  (`$TYNET_BREW/share/zsh-completions`, `.../zsh/site-functions`,
+  `$TYNET_HOME/functions`); `$TYNET_BREW` is hardcoded to `${HOMEBREW_PREFIX:-/opt/homebrew}`
+  (no `brew --prefix` fork — `brew shellenv` runs in `~/.zprofile`). Defines
+  `tynet_load_fsh`. Autoloads extensionless files in `functions/`.
+- **compinit.zsh** — `compinit -C` (trust cache) unless the dump is missing or
+  >24h old, in which case a full `compinit` runs and `touch`es the dump. Byte-compiles
+  the dump to `.zwc` in the background when stale. Then completion `zstyle`s and a
+  `COMPLETION_WAITING_DOTS` equivalent. Dump lives at
+  `${XDG_CACHE_HOME:-~/.cache}/zsh/zcompdump-$ZSH_VERSION`.
+- **prompt.zsh** — `vcs_info` (git only) + a `precmd` hook that prints the rule line
+  (`─` fill, right-aligned `strftime` timestamp), then a two-line `PROMPT`. No
+  oh-my-zsh theme system. The one perf knob is
+  `zstyle ':vcs_info:git:*' check-for-changes false`.
 
-### Load order (and a gotcha)
+### `domains/`
 
-Files are sourced in alphabetical order by full path. With the current contexts that means:
+One file per domain. Section order inside a file: `exports → shell options →
+keybindings → PATH → aliases → functions` (not every file has every section).
 
-```
-osx/aliases.zsh → osx/exports.zsh → osx/functions.zsh → osx/rc.zsh
-→ zsh/aliases.zsh → zsh/exports.zsh → zsh/functions.zsh → zsh/rc.zsh
-```
+Selection logic in `init.zsh`:
 
-`$OS` is exported in `zsh/exports.zsh`, but it is referenced by `osx/aliases.zsh` and `zsh/aliases.zsh` which both load *earlier*. On a fresh shell `$OS` is empty when those files run, so `[[ "$OS" == 'osx' ]]` falls through to the non-macOS branch. If you are touching platform-conditional logic in an `aliases.zsh`, either move the conditional into `rc.zsh` or set `$OS` inline at the top of the file rather than relying on `zsh/exports.zsh`.
+| Pattern | When |
+|---|---|
+| `domains/00-*.zsh`, `domains/20-*.zsh` | always |
+| `domains/10-<os>.zsh` | `<os>` = `osx` or `linux` |
+| `domains/optional/<name>.zsh` (or `optional/*-<name>.zsh`) | each bare `<name>` line in `~/.config/tynet/domains` |
+| `domains/host/<shorthostname>.zsh` | if the file exists (loaded last) |
 
-`cleanpath` (defined in `zsh/functions.zsh`) only runs after every setup file has been sourced, so individual `rc.zsh` files can prepend duplicate path entries without worrying about deduplication.
+The top-level `domains/*.zsh(N)` glob does not recurse, so `optional/` and
+`host/` are deliberately separate — they're only ever reached through the
+opt-in config file or the hostname check, never by lexical order alone.
+Within the top-level files, the numeric prefix controls load order (`00`
+core, `10` OS, `20` personal, `30` tools).
+
+Current domains: `00-core`, `10-osx`, `10-linux`, `20-personal`, `30-tools`
+(always-on, top-level); `optional/work.zsh` (opt-in stub); `host/` (empty —
+no per-machine override exists yet).
+
+### `functions/`
+
+Extensionless files, added to `fpath` and `autoload -Uz`'d by `lib/plugins.zsh`.
+`setup-displays` (air15 `displayplacer` layout) lives here — defined, not run.
 
 ## Key Conventions
 
-- All setup files use `*.zsh` extension and are plain zsh shell.
-- Platform-conditional logic uses the `$OS` variable (set in `zsh/exports.zsh` from `uname`): values are `osx` or `linux`. This is used for cross-platform differences like `ls` color flags (`-G` on macOS, `--color=auto` on Linux).
-- Optional tool aliases (httpie, docker-compose, docker-machine, SourceTree, 1Password CLI) are guarded with `command -v` or path checks so they only load when the tool is installed.
-- Homebrew availability is checked with `type brew &>/dev/null` or `command -v` before using brew paths.
-- Use functions instead of aliases when positional arguments (`$1`, `$@`) are needed — aliases don't support arguments.
-- Use single quotes for aliases that reference shell variables (like `$PWD`) that should expand at runtime, not at definition time.
-- The `cg` function provides a bare-repo git workflow for dotfiles (`~/.cg/`).
+- Platform branches use `$TYNET_OS` (`osx` / `linux`). `$OS` is a kept alias.
+- Guard optional tools with `command -v`. Make heavy inits lazy (see the `goenv`
+  stub in `30-tools.zsh`) or cache their completion output via
+  `_tynet_cache_completion` (writes `~/.cache/tynet/<tool>-completion.zsh`,
+  refreshed when the binary is newer).
+- Never add a `brew`, `op`, `kubectl`, `anyenv`, or similar subprocess to a code
+  path that runs on every shell start — that is the class of cost this repo exists
+  to avoid.
+- fast-syntax-highlighting stays last (sourced by `init.zsh`, after PATH de-dupe).
+- Use functions, not aliases, when positional args are needed.
+- Single-quote aliases whose variables must expand at call time (`ppath`, `tya`).
+- The `cg` function (`20-personal.zsh`) drives the bare-repo dotfiles workflow (`~/.cg/`).
 
 ## Testing changes
 
-There is no build or test suite. To verify changes:
+No build or test suite.
 
-- Open a new shell (or `exec zsh`) — this re-runs the full plugin chain end-to-end, which is the most realistic check.
-- For a faster iteration on a single setup file, `source plugins/personalize/setups/<context>/<file>.zsh` directly, but be aware this skips the alphabetical ordering and the trailing `cleanpath` call.
-- After changes, sanity-check `echo $PATH | tr : '\n'` for duplicates or surprising ordering, and confirm guarded blocks (e.g. `command -v op`) still no-op cleanly when the tool is absent.
+- **Full check:** `exec zsh` (or open a new terminal) — re-runs `init.zsh`
+  end-to-end.
+- **Startup cost:** `for i in $(seq 1 10); do /usr/bin/time zsh -i -c exit; done`
+- **Profile:** `TYNET_PROFILE=1 zsh -i -c exit` — check nothing forks a subprocess
+  per shell and `compinit` is single-digit ms on the second run.
+- **Single file, fast loop:** `source domains/<file>.zsh` (skips ordering + the
+  trailing PATH de-dupe / fsh load).
+- After changes: `print -l $path` for duplicates / ordering; confirm guarded blocks
+  no-op when the tool is absent, e.g.
+  `env -i HOME=$HOME PATH=/usr/bin:/bin zsh -ic exit`.
+- **Completion:** delete `~/.cache/zsh/zcompdump*`, start a shell, confirm it
+  rebuilds and a `.zwc` appears; try `git che<Tab>`, `kubectl get po<Tab>`, `op <Tab>`.
