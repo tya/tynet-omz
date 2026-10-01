@@ -14,6 +14,21 @@ It used to be an oh-my-zsh `ZSH_CUSTOM` plugin dir. oh-my-zsh was removed becaus
 dominated startup time (unoptimised `compinit` every shell + framework loader ≈ 1s).
 There is no oh-my-zsh, no plugin manager, and no `ZSH_CUSTOM` anymore.
 
+### Behavior changes from the oh-my-zsh era
+
+Anything that looks like a regression against the old setup is probably one
+of these intentional changes, not a bug:
+
+- `docker-machine`'s alias is `dm`, not `mac` (`mac` was a footgun).
+- `setup-displays` (air15 `displayplacer` layout) no longer runs at shell
+  startup — it's autoloaded from `functions/` and must be invoked by hand.
+- oh-my-zsh's implicit `setopt`s, keybindings, and ↑/↓ prefix-search are now
+  declared explicitly in `domains/00-core.zsh` — if a default seems to have
+  disappeared, it was probably an oh-my-zsh framework default that now needs
+  an explicit line there.
+- `~/.oh-my-zsh` is unreferenced and safe to delete once this lands alongside
+  the companion `~/.zshrc` change in the `cg` dotfiles repo.
+
 ## Architecture
 
 `init.zsh` is the entry point. In order it:
@@ -60,15 +75,18 @@ Selection logic in `init.zsh`:
 |---|---|
 | `domains/00-*.zsh`, `domains/20-*.zsh` | always |
 | `domains/10-<os>.zsh` | `<os>` = `osx` or `linux` |
-| `domains/*-<name>.zsh` | each bare `<name>` line in `~/.config/tynet/domains` |
-| `domains/<shorthostname>.zsh` | if the file exists (loaded last) |
+| `domains/optional/<name>.zsh` (or `optional/*-<name>.zsh`) | each bare `<name>` line in `~/.config/tynet/domains` |
+| `domains/host/<shorthostname>.zsh` | if the file exists (loaded last) |
 
-Files are sorted lexically by basename, so the numeric prefix controls load order
-(`00` core, `10` OS, `20` personal, `30` tools, `50` late/opt-in). A per-host file
-has no prefix and sorts after the numbered ones.
+The top-level `domains/*.zsh(N)` glob does not recurse, so `optional/` and
+`host/` are deliberately separate — they're only ever reached through the
+opt-in config file or the hostname check, never by lexical order alone.
+Within the top-level files, the numeric prefix controls load order (`00`
+core, `10` OS, `20` personal, `30` tools).
 
-Current domains: `00-core`, `10-macos`, `10-linux`, `20-personal`, `30-tools`,
-`50-work` (opt-in stub).
+Current domains: `00-core`, `10-osx`, `10-linux`, `20-personal`, `30-tools`
+(always-on, top-level); `optional/work.zsh` (opt-in stub); `host/` (empty —
+no per-machine override exists yet).
 
 ### `functions/`
 

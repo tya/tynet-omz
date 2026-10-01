@@ -33,11 +33,12 @@ lib/
   prompt.zsh          hand-rolled prompt (rule + timestamp / user@host / cwd / git)
 domains/
   00-core.zsh         every host: shell opts, keybindings, aliases, functions, PATH
-  10-macos.zsh        $TYNET_OS == osx: BSD ls, command-not-found, Ghostty→MacVim
+  10-osx.zsh          $TYNET_OS == osx: BSD ls, command-not-found, Ghostty→MacVim
   10-linux.zsh        $TYNET_OS == linux: GNU ls
   20-personal.zsh     every host: dotfiles `cg`, personal cd aliases
   30-tools.zsh        every host: fzf, op, kubectl, goenv (lazy), docker, tmux, …
-  50-work.zsh         opt-in only (see below)
+  optional/           opt-in only (see below) — e.g. optional/work.zsh
+  host/               per-machine overrides (see below), empty until you add one
 functions/            extensionless files, autoloaded via fpath (e.g. setup-displays)
 ```
 
@@ -47,12 +48,19 @@ functions/            extensionless files, autoloaded via fpath (e.g. setup-disp
 
 - `domains/00-*.zsh` and `domains/20-*.zsh` — always
 - `domains/10-<os>.zsh` — where `<os>` is `osx` or `linux`
-- `domains/*-<name>.zsh` — for each bare `<name>` listed (one per line) in
-  `~/.config/tynet/domains`. Example: `echo work >> ~/.config/tynet/domains`
-- `domains/<shorthostname>.zsh` — if present, loaded last (per-machine overrides)
+- `domains/optional/<name>.zsh` (or `optional/*-<name>.zsh`) — for each bare
+  `<name>` listed (one per line) in `~/.config/tynet/domains`.
+  Example: `echo work >> ~/.config/tynet/domains`
+- `domains/host/<shorthostname>.zsh` — if present, loaded last (per-machine
+  overrides). `<shorthostname>` is `$HOST` with everything after the first
+  `.` stripped, e.g. `air15` for `air15.local`. The directory exists but is
+  empty by default — nothing loads from it until you add a file.
 
-Add a new domain by dropping a `NN-name.zsh` file in `domains/`. Use a numeric
-prefix to place it in load order (`00` core → `50` late); pick `20`–`40` for most.
+Add a new always-on domain by dropping a `NN-name.zsh` file directly in
+`domains/`. Use a numeric prefix to place it in load order (`00` core → `30`
+tools; pick `20`–`30` for most). Add a new opt-in domain under
+`domains/optional/` instead — see `optional/work.zsh` for the pattern
+(including how to keep secrets out of git via a `*.local.zsh` include).
 
 ## Conventions
 
@@ -81,3 +89,22 @@ Git status comes from `vcs_info`; if it feels slow in a very large repo:
 ```zsh
 zstyle ':vcs_info:git:*' check-for-changes false
 ```
+
+## Migrating from oh-my-zsh
+
+Behavior changes to expect the first time you switch over:
+
+- **`dm` replaces `docker-machine`'s `mac` alias.** `mac` was a footgun (too
+  close to typing an actual hostname); `command -v docker-machine` still guards it.
+- **`setup-displays` no longer runs at startup.** It's an autoloaded function
+  now (`functions/setup-displays`) — run it by hand when you want the air15
+  `displayplacer` layout applied, instead of it firing on every new shell.
+- **Shell options and keybindings are explicit, not implicit.** oh-my-zsh set
+  a bunch of these (history dedup, `AUTO_CD`, `AUTO_PUSHD`, emacs keybindings,
+  ↑/↓ prefix search) as framework defaults. They're now declared directly in
+  `domains/00-core.zsh` — if a key or option you relied on seems to have
+  changed, that file is where to look.
+- **`~/.oh-my-zsh` is safe to delete** once this is merged and `~/.zshrc`
+  sources `init.zsh` directly (see the companion PR in the `cg` dotfiles
+  repo) — nothing here still reads from it. Leaving it in place is harmless,
+  just unused disk.
