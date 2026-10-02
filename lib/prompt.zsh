@@ -2,50 +2,37 @@
 ###############################################################################
 # FILE: lib/prompt.zsh
 #
-# Hand-rolled prompt (replaces the oh-my-zsh `risto` theme).
+# Prompt — ported from the oh-my-zsh `risto` theme
+# (~/.oh-my-zsh/themes/risto.zsh-theme) plus its default dirty-marker setting
+# (ZSH_THEME_GIT_PROMPT_DIRTY="*" / CLEAN="" in oh-my-zsh's
+# lib/theme-and-appearance.zsh). Kept visually identical, no oh-my-zsh
+# dependency:
 #
-#   ───────────────────────────────────────────────────  2026-09-01 14:23:05
-#   ty@air15  ~/src/tynet-omz  ‹master*›
-#   ❯
+#   ty@air15:src ‹master*› $
 #
-# Line 1  full-width rule, right-aligned timestamp
-# Line 2  user@host, cwd, git branch + dirty markers (info `risto` showed)
-# Line 3  prompt char — green normally, red after a failed command
-#
-# If `check-for-changes` ever feels slow in a huge repo, disable it:
-#   zstyle ':vcs_info:git:*' check-for-changes false
+# user@host (green) : last two path components (bold blue), a single space,
+# then ‹branch› in red with a trailing `*` if the tree is dirty — omitted
+# entirely outside a git repo — then the prompt char (`$`, or `#` as root)
+# in the terminal's default color. One line. No second line, no RPROMPT, no
+# exit-status coloring: risto never had any of those.
 ###############################################################################
 
 setopt PROMPT_SUBST
-zmodload zsh/datetime
-autoload -Uz vcs_info add-zsh-hook
 
-zstyle ':vcs_info:*'      enable git
-zstyle ':vcs_info:git:*'  check-for-changes true
-zstyle ':vcs_info:git:*'  unstagedstr  '*'
-zstyle ':vcs_info:git:*'  stagedstr    '+'
-zstyle ':vcs_info:git:*'  formats       '%b%u%c'
-zstyle ':vcs_info:git:*'  actionformats '%b|%a%u%c'
+# Single git status call per prompt, same as oh-my-zsh's parse_git_dirty.
+# GIT_OPTIONAL_LOCKS=0 avoids lock contention with other git processes,
+# same guard oh-my-zsh's __git_prompt_git wrapper used.
+_tynet_git_prompt() {
+  local ref
+  ref=$(GIT_OPTIONAL_LOCKS=0 command git symbolic-ref --short HEAD 2>/dev/null) \
+    || ref=$(GIT_OPTIONAL_LOCKS=0 command git describe --tags --exact-match HEAD 2>/dev/null) \
+    || ref=$(GIT_OPTIONAL_LOCKS=0 command git rev-parse --short HEAD 2>/dev/null) \
+    || return
 
-typeset -g _tynet_git=''
+  local dirty=''
+  [[ -n $(GIT_OPTIONAL_LOCKS=0 command git status --porcelain --ignore-submodules 2>/dev/null) ]] && dirty='*'
 
-_tynet_precmd() {
-  vcs_info
-  if [[ -n $vcs_info_msg_0_ ]]; then
-    _tynet_git="  %F{red}‹${vcs_info_msg_0_}›%f"
-  else
-    _tynet_git=''
-  fi
-
-  local ts bar
-  strftime -s ts '%Y-%m-%d %H:%M:%S' $EPOCHSECONDS
-  local -i w=$(( COLUMNS - ${#ts} - 1 ))
-  (( w < 0 )) && w=0
-  bar="${(l:$w::─:)}"
-  print -Pr -- "%F{240}${bar}%f ${ts}"
+  print -n "%F{red}‹${ref//\%/%%}${dirty}›%f"
 }
-add-zsh-hook precmd _tynet_precmd
 
-PROMPT='%F{green}%n@%m%f  %B%F{blue}%~%f%b${_tynet_git}
-%(?.%F{green}.%F{red})%(!.#.❯)%f '
-RPROMPT=''
+PROMPT='%F{green}%n@%m%f:%B%F{blue}%2~%f%b $(_tynet_git_prompt)%(!.#.$) '
