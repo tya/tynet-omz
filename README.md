@@ -30,7 +30,7 @@ init.zsh              entry point: OS detection, ordered sourcing, PATH de-dupe
 lib/
   plugins.zsh         fpath wiring + fast-syntax-highlighting helper (no `brew` fork)
   compinit.zsh        completion system: daily audit, cached dump, async zcompile
-  prompt.zsh          hand-rolled prompt (rule + timestamp / user@host / cwd / git)
+  prompt.zsh          prompt — ported from oh-my-zsh's agnosterzak theme
 domains/
   00-core.zsh         every host: shell opts, keybindings, aliases, functions, PATH
   10-osx.zsh          $TYNET_OS == osx: BSD ls, command-not-found, Ghostty→MacVim
@@ -76,19 +76,26 @@ tools; pick `20`–`30` for most). Add a new opt-in domain under
 
 ## Prompt
 
+A dependency-free port of the oh-my-zsh
+[agnosterzak](https://github.com/zakaziko99/agnosterzak-ohmyzsh-theme) theme —
+a two-line Powerline-style prompt:
+
 ```
-──────────────────────────────────────────────────  2026-09-01 14:23:05
-ty@air15  ~/src/tynet-omz  ‹master*›
-❯
+<blank line>
+[✘ error][⚡ root][⚙ jobs]  [🔋 battery]  [time]  [cwd]  [git branch + status]
+[@user, or user@host over SSH]
 ```
 
-Rule + right-aligned timestamp, then `user@host`, cwd, and git branch with dirty
-markers (`*` unstaged, `+` staged). Prompt char turns red after a failed command.
-Git status comes from `vcs_info`; if it feels slow in a very large repo:
+Each segment shows only when relevant — no git segment outside a repo, no
+battery segment on AC power, no status segment on a clean exit with no
+background jobs. Requires a **Nerd/Powerline-patched font** for the
+segment-separator arrow and branch icon; Ghostty is set to
+`MesloLGS Nerd Font Mono` for this (see the `cg` dotfiles repo).
 
-```zsh
-zstyle ':vcs_info:git:*' check-for-changes false
-```
+Unlike the rest of this repo, this prompt forks several subprocesses
+(`git`, `ioreg`/`acpi`, `jobs`) on every render, not just once at shell
+startup — that's inherent to the upstream theme's design, not something
+introduced here.
 
 ## Migrating from oh-my-zsh
 
