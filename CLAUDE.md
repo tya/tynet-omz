@@ -59,10 +59,20 @@ of these intentional changes, not a bug:
   the dump to `.zwc` in the background when stale. Then completion `zstyle`s and a
   `COMPLETION_WAITING_DOTS` equivalent. Dump lives at
   `${XDG_CACHE_HOME:-~/.cache}/zsh/zcompdump-$ZSH_VERSION`.
-- **prompt.zsh** — `vcs_info` (git only) + a `precmd` hook that prints the rule line
-  (`─` fill, right-aligned `strftime` timestamp), then a two-line `PROMPT`. No
-  oh-my-zsh theme system. The one perf knob is
-  `zstyle ':vcs_info:git:*' check-for-changes false`.
+- **prompt.zsh** — dependency-free port of oh-my-zsh's `agnosterzak` theme
+  (upstream: https://github.com/zakaziko99/agnosterzak-ohmyzsh-theme).
+  `_tynet_agnoster_*`-prefixed functions build a two-line Powerline-style
+  `PROMPT` via `%K{}`/`%F{}` segments (`_tynet_agnoster_segment` /
+  `_tynet_agnoster_end`); `fg`/`fg_bold`/`fg_no_bold` come from plain zsh
+  (`autoload colors`), not oh-my-zsh. Needs a Nerd/Powerline font for the
+  separator arrow (U+E0B0) and branch icon (U+E0A0) — Ghostty is set to
+  `MesloLGS Nerd Font Mono`. No battery segment (dropped — macOS shows
+  that in the menu bar, and it cost an `ioreg` fork per render upstream).
+  Unlike every other file here, this one still forks subprocesses (`git`,
+  `jobs`) on *every* prompt render, not just at shell startup — inherent
+  to the upstream design, not a regression. The git segment's fork count
+  is trimmed from upstream's ~20 down to 7-8 (see the comment above
+  `_tynet_agnoster_git`).
 
 ### `domains/`
 
