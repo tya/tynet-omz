@@ -59,10 +59,12 @@ of these intentional changes, not a bug:
   the dump to `.zwc` in the background when stale. Then completion `zstyle`s and a
   `COMPLETION_WAITING_DOTS` equivalent. Dump lives at
   `${XDG_CACHE_HOME:-~/.cache}/zsh/zcompdump-$ZSH_VERSION`.
-- **prompt.zsh** — `vcs_info` (git only) + a `precmd` hook that prints the rule line
-  (`─` fill, right-aligned `strftime` timestamp), then a two-line `PROMPT`. No
-  oh-my-zsh theme system. The one perf knob is
-  `zstyle ':vcs_info:git:*' check-for-changes false`.
+- **prompt.zsh** — a direct, dependency-free port of the old oh-my-zsh `risto`
+  theme: `$PROMPT` does `user@host:%2~ $(_tynet_git_prompt)%(!.#.$) `, and
+  `_tynet_git_prompt` makes one `git status --porcelain` call (same cost as
+  oh-my-zsh's `parse_git_dirty`) to print `‹branch›` with a trailing `*` if
+  dirty, or nothing outside a git repo. No `vcs_info`, no oh-my-zsh theme
+  system, no RPROMPT, no exit-status coloring — risto had none of those.
 
 ### `domains/`
 
