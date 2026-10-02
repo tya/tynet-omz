@@ -91,4 +91,13 @@ typeset -U path PATH fpath FPATH
 # syntax highlighting must be sourced last
 (( $+functions[tynet_load_fsh] )) && tynet_load_fsh
 
-[[ -n $TYNET_PROFILE ]] && zprof
+# `if`/`fi` (not `[[ ]] &&`): when the condition is false and there's no
+# `else`, the whole `if` exits 0 — `[[ ]] && cmd` would instead leak the
+# test's own exit status (1, since $TYNET_PROFILE is normally unset) as
+# this file's — and thus this shell's — exit status right as the very
+# first prompt renders. Harmless until a prompt (like agnosterzak's status
+# segment) actually displays $?, at which point every new shell shows a
+# false "last command failed" indicator before you've typed anything.
+if [[ -n $TYNET_PROFILE ]]; then
+  zprof
+fi
