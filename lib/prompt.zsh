@@ -45,9 +45,15 @@ autoload -Uz colors && colors
 
 typeset -g _tynet_agnoster_bg='NONE'
 
-# Segment-separator / status icons (Powerline-patched font required)
-typeset -g _tynet_agnoster_sep=$''
-typeset -g _tynet_agnoster_branch=$''
+# Segment-separator / status icons (Powerline-patched font required).
+# The separator and branch icon are written as \uXXXX escapes, not pasted
+# literally — both are Private-Use-Area codepoints (U+E0B0, U+E0A0), and at
+# least one text pipeline between here and the file on disk silently
+# stripped the literal bytes while leaving standard-Unicode glyphs (✘⚡⚙)
+# alone. `$''` is interpreted by zsh itself at parse time, so it
+# can't be lost in transit the same way.
+typeset -g _tynet_agnoster_sep=$'\ue0b0'
+typeset -g _tynet_agnoster_branch=$'\ue0a0'
 typeset -g _tynet_agnoster_cross=$'✘'
 typeset -g _tynet_agnoster_lightning=$'⚡'
 typeset -g _tynet_agnoster_gear=$'⚙'
@@ -261,7 +267,7 @@ _tynet_agnoster_virtualenv() {
 }
 
 _tynet_agnoster_time() {
-  _tynet_agnoster_segment blue white "%{$fg_bold[white]%}%D{%a %e %b - %H:%M}%{$fg_no_bold[white]%}"
+  _tynet_agnoster_segment blue white "%{$fg_bold[white]%}%D{%a %e %b@%H:%M}%{$fg_no_bold[white]%}"
 }
 
 # Error / root / background-jobs indicator
@@ -289,6 +295,7 @@ _tynet_agnoster_build() {
   print -n "\n"
   _tynet_agnoster_context
   _tynet_agnoster_end
+  print -n ' $'
 }
 
 PROMPT='%{%f%b%k%}$(_tynet_agnoster_build) '
