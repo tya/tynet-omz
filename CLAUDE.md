@@ -66,9 +66,13 @@ of these intentional changes, not a bug:
   `_tynet_agnoster_end`); `fg`/`fg_bold`/`fg_no_bold` come from plain zsh
   (`autoload colors`), not oh-my-zsh. Needs a Nerd/Powerline font for the
   separator arrow (U+E0B0) and branch icon (U+E0A0) — Ghostty is set to
-  `MesloLGS Nerd Font Mono`. Unlike every other file here, this one forks
-  subprocesses (`git`, `ioreg`/`acpi`, `jobs`) on *every* prompt render, not
-  just at shell startup — inherent to the upstream design, not a regression.
+  `MesloLGS Nerd Font Mono`. No battery segment (dropped — macOS shows
+  that in the menu bar, and it cost an `ioreg` fork per render upstream).
+  Unlike every other file here, this one still forks subprocesses (`git`,
+  `jobs`) on *every* prompt render, not just at shell startup — inherent
+  to the upstream design, not a regression. The git segment's fork count
+  is trimmed from upstream's ~20 down to 7-8 (see the comment above
+  `_tynet_agnoster_git`).
 
 ### `domains/`
 

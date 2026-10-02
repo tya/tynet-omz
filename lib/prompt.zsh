@@ -24,7 +24,9 @@
 #     reimplemented below as a plain dirty-check (same `git status
 #     --porcelain --ignore-submodules=dirty` upstream uses by default).
 #
-# Deliberate deviations from upstream, both cosmetic-free:
+# Deliberate deviations from upstream:
+#   - No battery segment — macOS already shows this in the menu bar, and
+#     dropping it removes an ~17ms `ioreg` fork from every render.
 #   - `$(uname)` → `$TYNET_OS` (already set by init.zsh) — saves an `uname`
 #     fork on every single prompt render, not just shell startup.
 #   - functions/vars are `_tynet_agnoster_*`-prefixed instead of upstream's
@@ -32,9 +34,10 @@
 #     that defines a function or global by those common names.
 #
 # Cost note: unlike lib/compinit.zsh's "never fork per shell" rule, this
-# prompt forks several subprocesses (git, ioreg/acpi, jobs) on *every*
-# prompt render, not just once at shell startup — that's inherent to the
-# agnoster design upstream, not a regression introduced here.
+# prompt still forks several subprocesses (git, jobs) on *every* prompt
+# render, not just once at shell startup — inherent to the agnoster design
+# upstream, not a regression introduced here. See the comment above
+# _tynet_agnoster_git for what's already been trimmed from that cost.
 ###############################################################################
 
 setopt PROMPT_SUBST
@@ -86,45 +89,6 @@ _tynet_agnoster_context() {
     _tynet_agnoster_segment magenta white "%{$fg_bold[white]%(!.%{%F{white}%}.)%}$USER@%m%{$fg_no_bold[white]%}"
   else
     _tynet_agnoster_segment yellow magenta "%{$fg_bold[magenta]%(!.%{%F{magenta}%}.)%}@$USER%{$fg_no_bold[magenta]%}"
-  fi
-}
-
-# Battery level (only drawn on battery power, i.e. unplugged)
-_tynet_agnoster_battery() {
-  local HEART=$'♥ '
-
-  if [[ $TYNET_OS == osx ]]; then
-    local smart_battery_status="$(ioreg -rc "AppleSmartBattery")"
-    [[ $(grep -c '"ExternalConnected"[[:space:]]*=[[:space:]]*No' <<< "$smart_battery_status") -eq 1 ]] || return
-
-    local maxcap currentcap pct
-    maxcap=$(sed -n 's/^.*"MaxCapacity"[[:space:]]*=[[:space:]]*//p' <<< "$smart_battery_status")
-    currentcap=$(sed -n 's/^.*"CurrentCapacity"[[:space:]]*=[[:space:]]*//p' <<< "$smart_battery_status")
-    (( maxcap == 0 )) && return
-    pct=$(( currentcap * 100 / maxcap ))
-
-    if (( pct > 50 )); then
-      _tynet_agnoster_segment green white
-    elif (( pct > 20 )); then
-      _tynet_agnoster_segment yellow white
-    else
-      _tynet_agnoster_segment red white
-    fi
-    print -n "%{$fg_bold[white]%}${HEART}${pct}%%%{$fg_no_bold[white]%}"
-
-  elif [[ $TYNET_OS == linux && -d /sys/module/battery ]] && (( $+commands[acpi] )); then
-    acpi 2>/dev/null | grep -q '^Battery.*Discharging' || return
-    local pct
-    pct=$(acpi | cut -f2 -d ',' | tr -cd '[:digit:]')
-
-    if (( pct > 40 )); then
-      _tynet_agnoster_segment green white
-    elif (( pct > 20 )); then
-      _tynet_agnoster_segment yellow white
-    else
-      _tynet_agnoster_segment red white
-    fi
-    print -n "%{$fg_bold[white]%}${HEART}${pct}%%%{$fg_no_bold[white]%}"
   fi
 }
 
@@ -315,7 +279,6 @@ _tynet_agnoster_build() {
   typeset -g _tynet_agnoster_retval=$?
   print -n "\n"
   _tynet_agnoster_status
-  _tynet_agnoster_battery
   _tynet_agnoster_time
   _tynet_agnoster_virtualenv
   _tynet_agnoster_dir

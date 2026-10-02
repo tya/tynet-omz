@@ -82,20 +82,24 @@ a two-line Powerline-style prompt:
 
 ```
 <blank line>
-[✘ error][⚡ root][⚙ jobs]  [🔋 battery]  [time]  [cwd]  [git branch + status]
+[✘ error][⚡ root][⚙ jobs]  [time]  [cwd]  [git branch + status]
 [@user, or user@host over SSH]
 ```
 
 Each segment shows only when relevant — no git segment outside a repo, no
-battery segment on AC power, no status segment on a clean exit with no
-background jobs. Requires a **Nerd/Powerline-patched font** for the
-segment-separator arrow and branch icon; Ghostty is set to
-`MesloLGS Nerd Font Mono` for this (see the `cg` dotfiles repo).
+status segment on a clean exit with no background jobs. Requires a
+**Nerd/Powerline-patched font** for the segment-separator arrow and branch
+icon; Ghostty is set to `MesloLGS Nerd Font Mono` for this (see the `cg`
+dotfiles repo).
 
-Unlike the rest of this repo, this prompt forks several subprocesses
-(`git`, `ioreg`/`acpi`, `jobs`) on every render, not just once at shell
+No battery segment — macOS already shows that in the menu bar, and
+upstream's version forked an `ioreg` call on every render to draw it.
+
+Unlike the rest of this repo, this prompt still forks several
+subprocesses (`git`, `jobs`) on every render, not just once at shell
 startup — that's inherent to the upstream theme's design, not something
-introduced here.
+introduced here. The git segment's fork count has been trimmed from ~20
+to 7-8 (see `lib/prompt.zsh`), bringing a full render down to ~70-75ms.
 
 ## Migrating from oh-my-zsh
 
