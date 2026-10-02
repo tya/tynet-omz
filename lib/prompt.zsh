@@ -267,7 +267,7 @@ _tynet_agnoster_virtualenv() {
 }
 
 _tynet_agnoster_time() {
-  _tynet_agnoster_segment blue white "%{$fg_bold[white]%}%D{%a %e %b@%H:%M}%{$fg_no_bold[white]%}"
+  _tynet_agnoster_segment blue white "%{$fg_bold[white]%}%D{%a %d %b@%H:%M}%{$fg_no_bold[white]%}"
 }
 
 # Error / root / background-jobs indicator
@@ -284,13 +284,41 @@ _tynet_agnoster_status() {
 _tynet_agnoster_build() {
   typeset -g _tynet_agnoster_retval=$?
   print -n "\n"
-  _tynet_agnoster_status
-  _tynet_agnoster_time
-  _tynet_agnoster_virtualenv
-  _tynet_agnoster_dir
-  _tynet_agnoster_git
-  _tynet_agnoster_hg
-  _tynet_agnoster_end
+
+  # Capture the top row's output instead of printing it straight through —
+  # needed to fill the rest of the line below. At this point none of its
+  # %-escapes (colors, %D{}, %~, the icons' own width) are resolved yet;
+  # PROMPT_SUBST only runs %-expansion once, on the *composed* PROMPT
+  # string, after this whole function has already returned. So `row1`
+  # printed below is still literal, unexpanded %-escape text, exactly as
+  # it would have been if each segment had `print -n`'d directly — the
+  # capture changes nothing about what the outer prompt expansion sees.
+  local row1
+  row1=$(
+    _tynet_agnoster_status
+    _tynet_agnoster_time
+    _tynet_agnoster_virtualenv
+    _tynet_agnoster_dir
+    _tynet_agnoster_git
+    _tynet_agnoster_hg
+    _tynet_agnoster_end
+  )
+  print -n "$row1"
+
+  # Fill the rest of this line, from just after the closing cap to the
+  # terminal's right edge, with a dim rule. Measuring "just after" means
+  # knowing row1's actual rendered width — so resolve one throwaway copy
+  # of it with print -P purely to measure (cheap: pure zsh, no forks),
+  # then strip the resulting SGR color codes to count only visible
+  # characters. Assumes every icon/separator glyph occupies one display
+  # column, true for Nerd Font symbols in a monospace terminal.
+  local resolved stripped
+  setopt localoptions extended_glob
+  resolved=$(print -P -- "$row1")
+  stripped=${resolved//$'\e'\[[0-9;]#m/}
+  local -i fill_width=$(( COLUMNS - ${#stripped} ))
+  (( fill_width > 0 )) && print -n "%F{240}${(l:$fill_width::─:)}%f"
+
   _tynet_agnoster_bg='NONE'
   print -n "\n"
   _tynet_agnoster_context

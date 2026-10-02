@@ -82,8 +82,8 @@ a two-line Powerline-style prompt:
 
 ```
 <blank line>
-[✘ error][⚡ root][⚙ jobs]  [time]  [cwd]  [git branch + status]
-[@user, or user@host over SSH]
+[✘ error][⚡ root][⚙ jobs]  [time]  [cwd]  [git branch + status]──────────
+[@user, or user@host over SSH] $
 ```
 
 Each segment shows only when relevant — no git segment outside a repo, no
@@ -91,6 +91,13 @@ status segment on a clean exit with no background jobs. Requires a
 **Nerd/Powerline-patched font** for the segment-separator arrow and branch
 icon; Ghostty is set to `MesloLGS Nerd Font Mono` for this (see the `cg`
 dotfiles repo).
+
+The top row fills the rest of the line, from the closing cap to the
+terminal's right edge, with a dim rule (`%F{240}`). Its width is computed
+by capturing that row's output, resolving a throwaway copy of it to learn
+its *actual* rendered width (colors and all, stripped back out), and
+padding with `$COLUMNS` minus that — see the comment above
+`_tynet_agnoster_build`.
 
 No battery segment — macOS already shows that in the menu bar, and
 upstream's version forked an `ioreg` call on every render to draw it.
