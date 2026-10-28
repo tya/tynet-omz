@@ -23,6 +23,7 @@ alias llm='ls -alhG | more'
 
 # aliases — applications
 [[ -d /Applications/SourceTree.app ]] && alias st='open -a SourceTree'
+[[ -d "/Applications/Google Chrome.app" ]] && alias chrome='open -a "Google Chrome"'
 
 # ============================================================================
 # command-not-found  (Homebrew tap; path hardcoded, no `brew` shell-out)
