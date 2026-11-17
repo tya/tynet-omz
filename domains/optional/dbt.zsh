@@ -43,7 +43,9 @@ fi
 # ---------------------------------------------------------------------------
 if command -v dbt &>/dev/null; then
   # dbt-core is a click app; this is click's built-in zsh-completion hook.
-  eval "$(_DBT_COMPLETE=zsh_source dbt)"
+  # Cached like fzf/op/kubectl below — `dbt` import is slow, don't fork it
+  # on every shell start.
+  _tynet_cache_completion dbt env _DBT_COMPLETE=zsh_source dbt
 
   alias dbtr='dbt run'
   alias dbtt='dbt test'
