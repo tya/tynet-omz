@@ -95,8 +95,9 @@ Within the top-level files, the numeric prefix controls load order (`00`
 core, `10` OS, `20` personal, `30` tools).
 
 Current domains: `00-core`, `10-osx`, `10-linux`, `20-personal`, `30-tools`
-(always-on, top-level); `optional/work.zsh` (opt-in stub); `host/` (empty —
-no per-machine override exists yet).
+(always-on, top-level); `optional/work.zsh` (opt-in stub), `optional/dbt.zsh`
+(opt-in dbt CLI aliases/completion + lazy pyenv init); `host/` (empty — no
+per-machine override exists yet).
 
 ### `functions/`
 
