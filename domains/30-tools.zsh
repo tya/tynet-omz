@@ -28,6 +28,13 @@ _tynet_cache_completion() {
 _tynet_cache_completion fzf fzf --zsh
 
 # ============================================================================
+# direnv  (per-directory env vars via .envrc; `direnv allow` to trust one)
+#   hook output cached like fzf's; the hook itself still forks `direnv export`
+#   on every prompt/cd — same category as the agnoster prompt's git forks.
+# ============================================================================
+_tynet_cache_completion direnv direnv hook zsh
+
+# ============================================================================
 # 1Password CLI
 # ============================================================================
 if command -v op &>/dev/null; then
